@@ -103,6 +103,8 @@ export type Phase = {
   to: number;
   photo: string; // sfeerfoto van de levensfase (Unsplash)
   photoAlt: string;
+  billboard: string; // fotobord langs de route
+  billboardAlt: string;
   hue: [string, string]; // gradient van de wereldzone
   deco: string[]; // zwevende emoji's in de zone
 };

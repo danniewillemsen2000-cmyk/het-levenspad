@@ -40,8 +40,9 @@ export function DiceOverlay({ roll }: { roll: number }) {
   }, []);
 
   const [rx, ry] = FINAL_ROT[roll] ?? [0, 0];
+  // drie volledige omwentelingen: rustig maar levendig tuimelen
   const transform = spun
-    ? `rotateX(${720 + rx}deg) rotateY(${720 + ry}deg)`
+    ? `rotateX(${1080 + rx}deg) rotateY(${1080 + ry}deg)`
     : "rotateX(-180deg) rotateY(-270deg)";
 
   return (

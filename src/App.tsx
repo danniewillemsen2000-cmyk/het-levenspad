@@ -100,9 +100,9 @@ export default function App() {
     if (to === from) return;
     setMoving(true);
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    // de dobbelsteen rolt over het scherm voordat de pion vertrekt
+    // de dobbelsteen rolt rustig over het scherm voordat de pion vertrekt
     setDiceRolling(roll);
-    await sleep(reduce ? 250 : 1800);
+    await sleep(reduce ? 250 : 2900);
     setDiceRolling(null);
     for (let p = from + 1; p <= to; p++) {
       setState((s) => ({ ...s, position: p }));
@@ -232,7 +232,7 @@ export default function App() {
     <div className="app-shell">
       <TopBar position={state.position} />
       <main className="main-layout">
-        <Board state={state} />
+        <Board state={state} moving={moving} />
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <ScorePanel
             state={state}
