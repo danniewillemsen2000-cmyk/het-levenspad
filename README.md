@@ -17,7 +17,7 @@ de nabespreking in de klas is onderdeel van het leerproces.
 
 ## Spelen
 
-Online: zie de GitHub Pages-link van deze repository.
+Online: **https://danniewillemsen2000-cmyk.github.io/het-levenspad/**
 
 Lokaal:
 
@@ -51,6 +51,12 @@ logboek bekijken, rapport exporteren (JSON/tekst) en nabespreekvragen tonen.
 ## Techniek
 
 React + TypeScript + Vite. Spelstand wordt lokaal bewaard (`localStorage`),
-geen backend nodig. Deployment via GitHub Actions naar GitHub Pages.
+geen backend nodig.
+
+Nieuwe versie online zetten (GitHub Pages, `gh-pages` branch):
+
+```bash
+npm run deploy
+```
 
 Foto's: [Unsplash](https://unsplash.com) (Unsplash-licentie).

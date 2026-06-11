@@ -2,3 +2,5 @@ node_modules
 dist
 *.local
 .DS_Store
+# lokaal aanwezig, maar push vereist workflow-scope op het token
+.github/workflows/
