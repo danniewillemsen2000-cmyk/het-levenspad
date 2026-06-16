@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GlyphIcon } from "./Glyphs";
 
 type Props = {
   onStart: () => void;
@@ -10,7 +11,7 @@ type Props = {
 export function StartScreen({ onStart, onTeacher, hasSave, onContinue }: Props) {
   const [showRules, setShowRules] = useState(false);
 
-  const floaters = ["🥦", "🍓", "🤖", "🌍", "🍼", "🧭", "🥕", "🍲"];
+  const floaters = ["leaf", "cupcake", "chip", "globe", "bottle", "cap", "cart", "heart"];
 
   return (
     <div className="start-screen">
@@ -22,10 +23,9 @@ export function StartScreen({ onStart, onTeacher, hasSave, onContinue }: Props) 
               left: `${6 + i * 12}%`,
               top: `${i % 2 === 0 ? 12 + i * 3 : 68 - i * 2}%`,
               animationDelay: `${i * 0.9}s`,
-              fontSize: `${1.6 + (i % 3) * 0.7}rem`,
             }}
           >
-            {f}
+            <GlyphIcon name={f} size={26 + (i % 3) * 12} color="var(--go-pink)" />
           </span>
         ))}
       </div>

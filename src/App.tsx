@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Board } from "./components/Board";
 import { CardPanel, type CardResult } from "./components/CardPanel";
-import { DiceOverlay } from "./components/DiceOverlay";
 import { EndScreen } from "./components/EndScreen";
 import { ScorePanel } from "./components/ScorePanel";
 import { StartScreen } from "./components/StartScreen";
@@ -24,7 +23,8 @@ export default function App() {
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [lastRoll, setLastRoll] = useState<number | null>(null);
-  const [diceRolling, setDiceRolling] = useState<number | null>(null);
+  const [spinId, setSpinId] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const [moving, setMoving] = useState(false);
   const [forcedRoll, setForcedRoll] = useState<number | null>(null);
 
@@ -92,21 +92,22 @@ export default function App() {
   };
 
   const handleRoll = async () => {
-    if (moving || activeCard || state.completed) return;
+    if (moving || spinning || activeCard || state.completed) return;
     const roll = forcedRoll ?? 1 + Math.floor(Math.random() * 6);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    // het rad draait rustig rond voordat de pion vertrekt
     setLastRoll(roll);
+    setSpinId((id) => id + 1);
+    setSpinning(true);
+    await sleep(reduce ? 250 : 3100);
+    setSpinning(false);
     const from = stateRef.current.position;
     const to = targetSquare(stateRef.current, roll);
     if (to === from) return;
     setMoving(true);
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    // de dobbelsteen rolt rustig over het scherm voordat de pion vertrekt
-    setDiceRolling(roll);
-    await sleep(reduce ? 250 : 2900);
-    setDiceRolling(null);
     for (let p = from + 1; p <= to; p++) {
       setState((s) => ({ ...s, position: p }));
-      await sleep(reduce ? 30 : 260);
+      await sleep(reduce ? 30 : 280);
     }
     setMoving(false);
     openCardAt(to);
@@ -237,9 +238,10 @@ export default function App() {
           <ScorePanel
             state={state}
             onRoll={handleRoll}
-            rollDisabled={moving || !!activeCard}
+            rollDisabled={moving || spinning || !!activeCard}
             lastRoll={lastRoll}
-            moving={moving}
+            spinId={spinId}
+            spinning={spinning}
             onToggleTeacher={() =>
               setState((s) => ({ ...s, teacherMode: !s.teacherMode }))
             }
@@ -255,7 +257,6 @@ export default function App() {
           )}
         </div>
       </main>
-      {diceRolling !== null && <DiceOverlay roll={diceRolling} />}
       {activeCard && (
         <CardPanel
           card={activeCard}

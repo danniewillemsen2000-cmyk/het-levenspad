@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { budgetLabel, timeLabel } from "../game/engine";
 import { careerById } from "../data/careers";
 import type { GameState, MeterId } from "../game/types";
+import { SpinnerWheel } from "./SpinnerWheel";
 
 function MeterBar({
   id,
@@ -47,7 +48,8 @@ type Props = {
   onRoll: () => void;
   rollDisabled: boolean;
   lastRoll: number | null;
-  moving: boolean;
+  spinId: number;
+  spinning: boolean;
   onToggleTeacher: () => void;
 };
 
@@ -56,7 +58,8 @@ export function ScorePanel({
   onRoll,
   rollDisabled,
   lastRoll,
-  moving,
+  spinId,
+  spinning,
   onToggleTeacher,
 }: Props) {
   const route = careerById(state.careerRouteId);
@@ -82,18 +85,13 @@ export function ScorePanel({
 
       {route && <div className="career-badge">Beroepsroute: {route.title}</div>}
 
-      <div className="dice-area">
-        <button className="btn" onClick={onRoll} disabled={rollDisabled}>
-          {moving ? "DE PION BEWEEGT…" : "GOOI DE DOBBELSTEEN"}
-        </button>
-        <div className="dice-result" aria-live="polite">
-          {lastRoll !== null && (
-            <>
-              Gegooid: <span className="dice-face">{lastRoll}</span>
-            </>
-          )}
-        </div>
-      </div>
+      <SpinnerWheel
+        value={lastRoll}
+        spinId={spinId}
+        spinning={spinning}
+        disabled={rollDisabled}
+        onSpin={onRoll}
+      />
 
       <button className="btn btn-ghost btn-small" onClick={onToggleTeacher}>
         {state.teacherMode ? "DOCENTMODUS SLUITEN" : "DOCENTMODUS"}
