@@ -15,7 +15,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Moeder houdt pasgeboren baby vast",
     billboard: U("1466637574441-749b8f19452f", 480),
     billboardAlt: "Snijplank met verse groenten, avocado en eieren",
-    hue: ["#2b1230", "#1a0d22"],
+    hue: ["#3f9e54", "#2f8042"],
     deco: ["🍼", "🥑", "🧸", "🥕"],
   },
   {
@@ -28,7 +28,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Kinderen werken samen in de klas",
     billboard: U("1503454537195-1dcabb73ffb9", 480),
     billboardAlt: "Vrolijk kind met verf op het gezicht",
-    hue: ["#0e2433", "#0a1722"],
+    hue: ["#49a651", "#34803c"],
     deco: ["🍎", "⚽", "🎒", "🐕"],
   },
   {
@@ -41,7 +41,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Vrienden zitten schouder aan schouder",
     billboard: U("1504674900247-0877df9cc836", 480),
     billboardAlt: "Drie bowls met verse maaltijden",
-    hue: ["#2e1535", "#190d23"],
+    hue: ["#3f9b5e", "#2c7847"],
     deco: ["📱", "💪", "🛹", "🎧"],
   },
   {
@@ -54,7 +54,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Studenten samen aan tafel met laptops en koffie",
     billboard: U("1511690656952-34342bb7c2f2", 480),
     billboardAlt: "Budgetbowl met kikkererwten en groenten",
-    hue: ["#102b26", "#0a1a17"],
+    hue: ["#2f9d74", "#237a57"],
     deco: ["🍜", "🎓", "🚲", "🪴"],
   },
   {
@@ -67,7 +67,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Stel kookt samen in de keuken",
     billboard: U("1469571486292-0ba58a3f068b", 480),
     billboardAlt: "Handen vormen samen een geschilderd hart",
-    hue: ["#33141f", "#1d0c14"],
+    hue: ["#5aa547", "#417f33"],
     deco: ["💼", "🏡", "👶", "🥘"],
   },
   {
@@ -80,7 +80,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Collega's buigen zich samen over een laptop",
     billboard: U("1512621776951-a57141f2eefd", 480),
     billboardAlt: "Bowl met verse groenten en avocado",
-    hue: ["#161c38", "#0d1022"],
+    hue: ["#6fa340", "#52792e"],
     deco: ["🩺", "⚖️", "🚴", "🫘"],
   },
   {
@@ -93,7 +93,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Oudere vrouw bereidt verse vis",
     billboard: U("1547592180-85f173990554", 480),
     billboardAlt: "Warme bowl met granen en groenten",
-    hue: ["#2d2410", "#1b160a"],
+    hue: ["#8a9a39", "#677327"],
     deco: ["🍵", "🧶", "🌻", "🚶"],
   },
   {
@@ -106,7 +106,7 @@ export const PHASES: Phase[] = [
     photoAlt: "Grootmoeder wordt geknuffeld door kleinkind",
     billboard: U("1511795409834-ef04bbd61622", 480),
     billboardAlt: "Feestelijk gedekte lange tafel",
-    hue: ["#301027", "#1c0a18"],
+    hue: ["#5f8a52", "#456538"],
     deco: ["🕯️", "🌳", "📖", "🏁"],
   },
 ];

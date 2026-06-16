@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PHASES, SQUARES, TYPE_LABELS, phaseForSquare } from "../data/board";
 import type { GameState, Square } from "../game/types";
 import { GLYPHS, GlyphIcon } from "./Glyphs";
@@ -69,26 +69,127 @@ function Shadow({ x, y, w }: { x: number; y: number; w: number }) {
   return <ellipse cx={x} cy={y + 2} rx={w} ry={w * 0.22} fill="rgba(0,0,0,0.32)" />;
 }
 
-function RoundTree({ x, y, s = 1 }: BuildProps) {
+type Tone = "green" | "warm" | "autumn";
+const CANOPY: Record<Tone, string[]> = {
+  green: ["#2f8f4e", "#37a85c", "#268043", "#43bd6a"],
+  warm: ["#56962f", "#69ad38", "#477a28", "#7bbf45"],
+  autumn: ["#c2742a", "#d98f33", "#a85f22", "#e0a83a"],
+};
+const PINE: Record<Tone, string[]> = {
+  green: ["#1f7a43", "#2a9150"],
+  warm: ["#3f7a2a", "#4f8f33"],
+  autumn: ["#6f6a26", "#85812f"],
+};
+const FLOWER_COLORS = ["#e50067", "#ffffff", "#f5c542", "#a78bfa", "#ff8fab"];
+
+function RoundTree({ x, y, s = 1, tone = "green" }: BuildProps & { tone?: Tone }) {
+  const c = CANOPY[tone];
   return (
     <g>
       <Shadow x={x} y={y} w={16 * s} />
       <rect x={x - 3 * s} y={y - 16 * s} width={6 * s} height={16 * s} rx={2 * s} fill="#5b3a25" />
-      <circle cx={x} cy={y - 26 * s} r={16 * s} fill="#2f8f4e" />
-      <circle cx={x - 9 * s} cy={y - 20 * s} r={11 * s} fill="#37a85c" />
-      <circle cx={x + 9 * s} cy={y - 21 * s} r={10 * s} fill="#268043" />
-      <circle cx={x + 2 * s} cy={y - 31 * s} r={9 * s} fill="#43bd6a" />
+      <circle cx={x} cy={y - 26 * s} r={16 * s} fill={c[0]} />
+      <circle cx={x - 9 * s} cy={y - 20 * s} r={11 * s} fill={c[1]} />
+      <circle cx={x + 9 * s} cy={y - 21 * s} r={10 * s} fill={c[2]} />
+      <circle cx={x + 2 * s} cy={y - 31 * s} r={9 * s} fill={c[3]} />
     </g>
   );
 }
 
-function PineTree({ x, y, s = 1 }: BuildProps) {
+function PineTree({ x, y, s = 1, tone = "green" }: BuildProps & { tone?: Tone }) {
+  const c = PINE[tone];
   return (
     <g>
       <Shadow x={x} y={y} w={14 * s} />
       <rect x={x - 2.5 * s} y={y - 10 * s} width={5 * s} height={10 * s} fill="#5b3a25" />
-      <path d={`M ${x} ${y - 46 * s} L ${x - 15 * s} ${y - 18 * s} L ${x + 15 * s} ${y - 18 * s} Z`} fill="#1f7a43" />
-      <path d={`M ${x} ${y - 36 * s} L ${x - 17 * s} ${y - 6 * s} L ${x + 17 * s} ${y - 6 * s} Z`} fill="#2a9150" />
+      <path d={`M ${x} ${y - 46 * s} L ${x - 15 * s} ${y - 18 * s} L ${x + 15 * s} ${y - 18 * s} Z`} fill={c[0]} />
+      <path d={`M ${x} ${y - 36 * s} L ${x - 17 * s} ${y - 6 * s} L ${x + 17 * s} ${y - 6 * s} Z`} fill={c[1]} />
+    </g>
+  );
+}
+
+function Bush({ x, y, s = 1, tone = "green" }: BuildProps & { tone?: Tone }) {
+  const c = CANOPY[tone];
+  return (
+    <g>
+      <Shadow x={x} y={y} w={13 * s} />
+      <circle cx={x - 7 * s} cy={y - 6 * s} r={8 * s} fill={c[2]} />
+      <circle cx={x + 7 * s} cy={y - 6 * s} r={8 * s} fill={c[0]} />
+      <circle cx={x} cy={y - 10 * s} r={9 * s} fill={c[1]} />
+    </g>
+  );
+}
+
+function Flower({ x, y, s = 1, color = "#e50067" }: BuildProps & { color?: string }) {
+  const petals = [];
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2;
+    petals.push(
+      <circle key={k} cx={x + Math.cos(a) * 3.4 * s} cy={y - 8 * s + Math.sin(a) * 3.4 * s} r={2.6 * s} fill={color} />,
+    );
+  }
+  return (
+    <g>
+      <line x1={x} y1={y} x2={x} y2={y - 8 * s} stroke="#3f7a2a" strokeWidth={1.5 * s} />
+      {petals}
+      <circle cx={x} cy={y - 8 * s} r={2.1 * s} fill="#ffd34d" />
+    </g>
+  );
+}
+
+// Deterministische pseudo-randomgenerator zodat het groen niet verspringt.
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type GreenItem = { kind: string; x: number; y: number; s: number; tone: Tone; color: string; key: string };
+
+function buildGreenery(): GreenItem[] {
+  const out: GreenItem[] = [];
+  for (let z = 0; z < 8; z++) {
+    const rnd = mulberry32(z * 97 + 13);
+    const tone: Tone = z >= 6 ? "autumn" : z >= 4 ? "warm" : "green";
+    const strip = (count: number, yMin: number, yMax: number, tag: string) => {
+      for (let i = 0; i < count; i++) {
+        const x = 36 + rnd() * 928;
+        const y = z * BAND + yMin + rnd() * (yMax - yMin);
+        const r = rnd();
+        const kind = r < 0.38 ? "round" : r < 0.6 ? "pine" : r < 0.82 ? "bush" : "flower";
+        const s = 0.55 + rnd() * 0.7;
+        const color = FLOWER_COLORS[Math.floor(rnd() * FLOWER_COLORS.length)];
+        out.push({ kind, x, y, s, tone, color, key: `${z}-${tag}-${i}` });
+      }
+    };
+    strip(6, 26, 112, "t");
+    strip(6, 196, 243, "b");
+  }
+  return out;
+}
+
+function Greenery() {
+  const items = useMemo(buildGreenery, []);
+  return (
+    <g aria-hidden="true">
+      {items.map((it) => {
+        switch (it.kind) {
+          case "round":
+            return <RoundTree key={it.key} x={it.x} y={it.y} s={it.s} tone={it.tone} />;
+          case "pine":
+            return <PineTree key={it.key} x={it.x} y={it.y} s={it.s} tone={it.tone} />;
+          case "bush":
+            return <Bush key={it.key} x={it.x} y={it.y} s={it.s} tone={it.tone} />;
+          case "flower":
+            return <Flower key={it.key} x={it.x} y={it.y} s={it.s} color={it.color} />;
+          default:
+            return null;
+        }
+      })}
     </g>
   );
 }
@@ -267,6 +368,7 @@ function Scenery() {
         const x = it.x;
         const y = it.zone * BAND + it.ly;
         const s = it.s ?? 1;
+        const tone: Tone = it.zone >= 6 ? "autumn" : it.zone >= 4 ? "warm" : "green";
         switch (it.kind) {
           case "house":
             return <House key={idx} x={x} y={y} s={s} />;
@@ -283,9 +385,9 @@ function Scenery() {
           case "dorm":
             return <Dorm key={idx} x={x} y={y} s={s} />;
           case "round":
-            return <RoundTree key={idx} x={x} y={y} s={s} />;
+            return <RoundTree key={idx} x={x} y={y} s={s} tone={tone} />;
           case "pine":
-            return <PineTree key={idx} x={x} y={y} s={s} />;
+            return <PineTree key={idx} x={x} y={y} s={s} tone={tone} />;
           case "lake":
             return <Lake key={idx} x={x} y={y} s={s} />;
           default:
@@ -335,7 +437,7 @@ function Billboard({ zone }: { zone: number }) {
 
 function Pawn({ x, y, moving }: { x: number; y: number; moving: boolean }) {
   return (
-    <g className={`pawn ${moving ? "is-moving" : ""}`} style={{ transform: `translate(${x}px, ${y}px)` }} aria-hidden="true">
+    <g className={`pawn ${moving ? "is-moving" : ""}`} style={{ transform: `translate(${x}px, ${y}px) scale(1.25)` }} aria-hidden="true">
       <ellipse className="pawn-shadow" cx="0" cy="14" rx="17" ry="5.5" />
       <g className="pawn-body">
         <ellipse cx="0" cy="10" rx="17" ry="7" fill="url(#pawnGrad)" stroke="#fff" strokeWidth="2" />
@@ -415,6 +517,18 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
   const [hovered, setHovered] = useState<number | null>(null);
   const road = useMemo(buildRoad, []);
   const tokenPos = nodePos(state.position);
+  const pawnRef = useRef<SVGGElement>(null);
+
+  // Camera volgt de pion: bij elke stap schuift het bord zodat de pion
+  // in beeld blijft — zo zie je het pionnetje echt over het bord lopen.
+  useEffect(() => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    pawnRef.current?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+  }, [state.position]);
 
   return (
     <div className="world-wrap">
@@ -428,12 +542,12 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
               </linearGradient>
             ))}
             <radialGradient id="zoneglow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(229,0,103,0.14)" />
-              <stop offset="100%" stopColor="rgba(229,0,103,0)" />
+              <stop offset="0%" stopColor="rgba(255,250,225,0.22)" />
+              <stop offset="100%" stopColor="rgba(255,250,225,0)" />
             </radialGradient>
             <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(34,80,46,0)" />
-              <stop offset="100%" stopColor="rgba(28,66,38,0.65)" />
+              <stop offset="0%" stopColor="rgba(20,50,28,0)" />
+              <stop offset="100%" stopColor="rgba(18,44,24,0.55)" />
             </linearGradient>
             <linearGradient id="pawnGrad" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#ff4d94" />
@@ -448,14 +562,21 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
               <ellipse cx={i % 2 === 0 ? 230 : 770} cy={i * BAND + 120} rx="340" ry="120" fill="url(#zoneglow)" />
               {/* grasgrond onderin de zone */}
               <rect x="0" y={i * BAND + 170} width={W} height={BAND - 170 + 6} fill="url(#ground)" />
-              <path d={`M 0 ${(i + 1) * BAND} Q 250 ${(i + 1) * BAND - 50} 520 ${(i + 1) * BAND - 16} T ${W} ${(i + 1) * BAND - 36} L ${W} ${(i + 1) * BAND} Z`} fill="rgba(60,140,80,0.16)" />
-              <line x1="0" y1={i * BAND} x2={W} y2={i * BAND} stroke="rgba(229,0,103,0.2)" strokeWidth="1.5" strokeDasharray="10 14" />
-              <Billboard zone={i} />
+              <path d={`M 0 ${(i + 1) * BAND} Q 250 ${(i + 1) * BAND - 50} 520 ${(i + 1) * BAND - 16} T ${W} ${(i + 1) * BAND - 36} L ${W} ${(i + 1) * BAND} Z`} fill="rgba(255,255,255,0.06)" />
+              <line x1="0" y1={i * BAND} x2={W} y2={i * BAND} stroke="rgba(18,44,24,0.4)" strokeWidth="2" />
             </g>
           ))}
 
-          {/* Landschap: huizen, school, ziekenhuis, bomen, water */}
+          {/* Landschap: bomen, struiken en bloemen */}
+          <Greenery />
+
+          {/* Gebouwen en water */}
           <Scenery />
+
+          {/* Fotoborden langs de route */}
+          {PHASES.map((_, i) => (
+            <Billboard key={`bb${i}`} zone={i} />
+          ))}
 
           {/* De weg: licht asfalt met donkere rand */}
           <path d={road} className="road-outer" />
@@ -476,8 +597,10 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             );
           })}
 
-          {/* Het pionnetje */}
-          <Pawn x={tokenPos.x} y={tokenPos.y - 10} moving={moving} />
+          {/* Het pionnetje (camera volgt deze groep) */}
+          <g ref={pawnRef}>
+            <Pawn x={tokenPos.x} y={tokenPos.y - 10} moving={moving} />
+          </g>
         </svg>
 
         {/* Fasekoppen met foto */}
