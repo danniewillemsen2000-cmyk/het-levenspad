@@ -291,7 +291,7 @@ button { font: inherit; cursor: pointer; }
 
 /* Het pionnetje (SVG) */
 .pawn {
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.5, 1);
+  transition: transform 0.44s cubic-bezier(0.4, 0, 0.5, 1);
   pointer-events: none;
 }
 .pawn-body {
@@ -301,7 +301,7 @@ button { font: inherit; cursor: pointer; }
   filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.55));
 }
 .pawn.is-moving .pawn-body {
-  animation: pawnhop 0.28s ease-in-out infinite;
+  animation: pawnhop 0.48s ease-in-out infinite;
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 12px rgba(229, 0, 103, 0.95));
 }
 .pawn-shadow { fill: rgba(0, 0, 0, 0.4); }

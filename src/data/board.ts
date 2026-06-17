@@ -111,6 +111,19 @@ export const PHASES: Phase[] = [
   },
 ];
 
+// Echte natuurfoto's als bordachtergrond per levensfase (lente → herfst).
+// Gebundeld in public/img zodat het bord offline werkt.
+export const ZONE_BG = [
+  "img/zone1.jpg",
+  "img/zone2.jpg",
+  "img/zone3.jpg",
+  "img/zone4.jpg",
+  "img/zone5.jpg",
+  "img/zone6.jpg",
+  "img/zone7.jpg",
+  "img/zone8.jpg",
+];
+
 // Foto voor het eindscherm: twee handen die elkaar bijna raken.
 export const END_PHOTO = U("1544027993-37dbfe43562a", 900);
 export const END_PHOTO_ALT = "Twee handen reiken naar elkaar";

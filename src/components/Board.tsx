@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { PHASES, SQUARES, TYPE_LABELS, phaseForSquare } from "../data/board";
+import { PHASES, SQUARES, TYPE_LABELS, ZONE_BG, phaseForSquare } from "../data/board";
 import type { GameState, Square } from "../game/types";
 import { GLYPHS, GlyphIcon } from "./Glyphs";
 
@@ -535,19 +535,10 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
       <div className="world" aria-label="Speelbord: het levenspad door acht levensfasen">
         <svg className="world-svg" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
           <defs>
-            {PHASES.map((p, i) => (
-              <linearGradient key={i} id={`zone${i}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={p.hue[0]} />
-                <stop offset="100%" stopColor={p.hue[1]} />
-              </linearGradient>
-            ))}
-            <radialGradient id="zoneglow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(255,250,225,0.22)" />
-              <stop offset="100%" stopColor="rgba(255,250,225,0)" />
-            </radialGradient>
-            <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(20,50,28,0)" />
-              <stop offset="100%" stopColor="rgba(18,44,24,0.55)" />
+            <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(8,14,8,0.42)" />
+              <stop offset="42%" stopColor="rgba(8,14,8,0.18)" />
+              <stop offset="100%" stopColor="rgba(8,14,8,0.5)" />
             </linearGradient>
             <linearGradient id="pawnGrad" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#ff4d94" />
@@ -555,27 +546,20 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             </linearGradient>
           </defs>
 
-          {/* Wereldzones per levensfase */}
+          {/* Wereldzones: echte natuurfoto per levensfase met donkere sluier */}
           {PHASES.map((p, i) => (
             <g key={p.rij}>
-              <rect x="0" y={i * BAND} width={W} height={BAND} fill={`url(#zone${i})`} />
-              <ellipse cx={i % 2 === 0 ? 230 : 770} cy={i * BAND + 120} rx="340" ry="120" fill="url(#zoneglow)" />
-              {/* grasgrond onderin de zone */}
-              <rect x="0" y={i * BAND + 170} width={W} height={BAND - 170 + 6} fill="url(#ground)" />
-              <path d={`M 0 ${(i + 1) * BAND} Q 250 ${(i + 1) * BAND - 50} 520 ${(i + 1) * BAND - 16} T ${W} ${(i + 1) * BAND - 36} L ${W} ${(i + 1) * BAND} Z`} fill="rgba(255,255,255,0.06)" />
-              <line x1="0" y1={i * BAND} x2={W} y2={i * BAND} stroke="rgba(18,44,24,0.4)" strokeWidth="2" />
+              <image
+                href={`${import.meta.env.BASE_URL}${ZONE_BG[i]}`}
+                x="0"
+                y={i * BAND}
+                width={W}
+                height={BAND}
+                preserveAspectRatio="xMidYMid slice"
+              />
+              <rect x="0" y={i * BAND} width={W} height={BAND} fill="url(#shade)" />
+              <line x1="0" y1={i * BAND} x2={W} y2={i * BAND} stroke="rgba(0,0,0,0.4)" strokeWidth="2.5" />
             </g>
-          ))}
-
-          {/* Landschap: bomen, struiken en bloemen */}
-          <Greenery />
-
-          {/* Gebouwen en water */}
-          <Scenery />
-
-          {/* Fotoborden langs de route */}
-          {PHASES.map((_, i) => (
-            <Billboard key={`bb${i}`} zone={i} />
           ))}
 
           {/* De weg: licht asfalt met donkere rand */}

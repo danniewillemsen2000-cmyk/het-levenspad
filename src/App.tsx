@@ -104,12 +104,17 @@ export default function App() {
     const from = stateRef.current.position;
     const to = targetSquare(stateRef.current, roll);
     if (to === from) return;
+    // korte pauze zodat je de uitkomst van het rad rustig ziet
+    await sleep(reduce ? 60 : 650);
+    // het pionnetje stapt zichtbaar vak voor vak vooruit
     setMoving(true);
     for (let p = from + 1; p <= to; p++) {
       setState((s) => ({ ...s, position: p }));
-      await sleep(reduce ? 30 : 280);
+      await sleep(reduce ? 40 : 480);
     }
     setMoving(false);
+    // pion is aangekomen; even laten landen voordat de kaart omhoog komt
+    await sleep(reduce ? 60 : 850);
     openCardAt(to);
   };
 
