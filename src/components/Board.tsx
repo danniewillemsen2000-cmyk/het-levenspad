@@ -501,11 +501,15 @@ function Tile({ sq, state, hovered }: { sq: Square; state: GameState; hovered: b
     .join(" ");
   return (
     <g className={cls} transform={`rotate(${a.toFixed(1)} ${x} ${y})`}>
-      <rect className="tile-bg" x={x - tw / 2} y={y - th / 2} width={tw} height={th} rx="9" fill={TYPE_COLORS[sq.type]} stroke={isMilestone ? "#fff" : "rgba(0,0,0,0.45)"} strokeWidth={isMilestone ? 3 : 2} />
+      <g filter="url(#tileShadow)">
+        <rect className="tile-bg" x={x - tw / 2} y={y - th / 2} width={tw} height={th} rx="10" fill={TYPE_COLORS[sq.type]} stroke={isMilestone ? "#fff" : "rgba(0,0,0,0.5)"} strokeWidth={isMilestone ? 3 : 2} />
+        {/* glans-toplaag geeft de tegel diepte */}
+        <rect x={x - tw / 2 + 2} y={y - th / 2 + 2} width={tw - 4} height={th - 4} rx="8" fill="url(#tileGloss)" pointerEvents="none" />
+      </g>
       <g className="tile-icon">
         <TileGlyph name={sq.icon} x={x} y={y + 2} dark={darkText} size={isMilestone ? 30 : 25} />
       </g>
-      <text className="tile-num" x={x - tw / 2 + 10} y={y - th / 2 + 16} fontSize="12.5" fontWeight="800" fill={darkText ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.9)"}>
+      <text className="tile-num" x={x - tw / 2 + 10} y={y - th / 2 + 16} fontSize="12.5" fontWeight="800" fill={darkText ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.92)"}>
         {sq.n}
       </text>
     </g>
@@ -518,6 +522,22 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
   const road = useMemo(buildRoad, []);
   const tokenPos = nodePos(state.position);
   const pawnRef = useRef<SVGGElement>(null);
+
+  // Zwevende lichtdeeltjes (pollen/zonlicht) maken het bord levend.
+  const motes = useMemo(() => {
+    const r = mulberry32(99);
+    const tint = ["#fff7e0", "#ffe1b0", "#ffd9ec", "#ffffff"];
+    return Array.from({ length: 22 }, () => ({
+      left: r() * 100,
+      top: r() * 100,
+      size: 3 + r() * 6,
+      dur: 9 + r() * 10,
+      delay: -r() * 18,
+      sway: r() * 46 - 23,
+      op: 0.3 + r() * 0.5,
+      color: tint[Math.floor(r() * tint.length)],
+    }));
+  }, []);
 
   // Camera volgt de pion: bij elke stap schuift het bord zodat de pion
   // in beeld blijft — zo zie je het pionnetje echt over het bord lopen.
@@ -544,6 +564,18 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
               <stop offset="0%" stopColor="#ff4d94" />
               <stop offset="100%" stopColor="#a9004c" />
             </linearGradient>
+            <linearGradient id="tileGloss" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.32)" />
+              <stop offset="38%" stopColor="rgba(255,255,255,0.04)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0.2)" />
+            </linearGradient>
+            {/* zachte slagschaduw zodat tegels en pad boven het landschap zweven */}
+            <filter id="tileShadow" x="-40%" y="-40%" width="180%" height="200%">
+              <feDropShadow dx="0" dy="3.5" stdDeviation="3" floodColor="#06120a" floodOpacity="0.5" />
+            </filter>
+            <filter id="roadShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#06120a" floodOpacity="0.55" />
+            </filter>
           </defs>
 
           {/* Wereldzones: echte natuurfoto per levensfase met donkere sluier */}
@@ -562,9 +594,12 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             </g>
           ))}
 
-          {/* De weg: licht asfalt met donkere rand */}
-          <path d={road} className="road-outer" />
-          <path d={road} className="road-inner" />
+          {/* De weg: een verhoogd pad dat boven het landschap zweeft */}
+          <g filter="url(#roadShadow)">
+            <path d={road} className="road-outer" />
+            <path d={road} className="road-inner" />
+            <path d={road} className="road-top" />
+          </g>
 
           {/* De 64 tegels óp de weg */}
           {SQUARES.map((sq) => (
@@ -586,6 +621,31 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             <Pawn x={tokenPos.x} y={tokenPos.y - 10} moving={moving} />
           </g>
         </svg>
+
+        {/* Levende sfeer: bewegend zonlicht, vignet en zwevende deeltjes */}
+        <div className="world-sweep" aria-hidden="true" />
+        <div className="world-vignette" aria-hidden="true" />
+        <div className="world-life" aria-hidden="true">
+          {motes.map((m, i) => (
+            <span
+              key={i}
+              className="mote"
+              style={
+                {
+                  left: `${m.left}%`,
+                  top: `${m.top}%`,
+                  width: `${m.size}px`,
+                  height: `${m.size}px`,
+                  background: m.color,
+                  animationDuration: `${m.dur}s`,
+                  animationDelay: `${m.delay}s`,
+                  "--sway": `${m.sway}px`,
+                  "--mote-op": m.op,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
 
         {/* Fasekoppen met foto */}
         {PHASES.map((p, i) => (
