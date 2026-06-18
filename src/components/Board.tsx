@@ -499,44 +499,93 @@ function Tile({ sq, state, hovered }: { sq: Square; state: GameState; hovered: b
   const cls = ["tile", isMilestone ? "is-milestone" : "", current ? "current" : "", visited ? "visited" : "", hovered ? "hovered" : ""]
     .filter(Boolean)
     .join(" ");
+  // golf-vertraging: het ademen rolt als een golf over het bord
+  const delay = `${((sq.n * 0.13) % 3.1).toFixed(2)}s`;
   return (
     <g className={cls} transform={`rotate(${a.toFixed(1)} ${x} ${y})`}>
-      <g filter="url(#tileShadow)">
+      <g className="tile-breathe" style={{ animationDelay: delay }}>
+        {/* goedkope slagschaduw zodat de tegel zweeft */}
+        <rect x={x - tw / 2} y={y - th / 2 + 4.5} width={tw} height={th} rx="10" fill="rgba(0,0,0,0.42)" />
         <rect className="tile-bg" x={x - tw / 2} y={y - th / 2} width={tw} height={th} rx="10" fill={TYPE_COLORS[sq.type]} stroke={isMilestone ? "#fff" : "rgba(0,0,0,0.5)"} strokeWidth={isMilestone ? 3 : 2} />
         {/* glans-toplaag geeft de tegel diepte */}
         <rect x={x - tw / 2 + 2} y={y - th / 2 + 2} width={tw - 4} height={th - 4} rx="8" fill="url(#tileGloss)" pointerEvents="none" />
+        <g className="tile-icon">
+          <TileGlyph name={sq.icon} x={x} y={y + 2} dark={darkText} size={isMilestone ? 30 : 25} />
+        </g>
+        <text className="tile-num" x={x - tw / 2 + 10} y={y - th / 2 + 16} fontSize="12.5" fontWeight="800" fill={darkText ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.92)"}>
+          {sq.n}
+        </text>
       </g>
-      <g className="tile-icon">
-        <TileGlyph name={sq.icon} x={x} y={y + 2} dark={darkText} size={isMilestone ? 30 : 25} />
+    </g>
+  );
+}
+
+// Fladderende vlinders die over het bord zweven.
+const BUTTERFLIES = [
+  { path: "M -50 360 C 220 240, 360 520, 560 380 S 920 300, 1060 470", dur: 23, begin: 0, color: "#ff7ab8" },
+  { path: "M 1060 980 C 780 860, 640 1140, 430 1010 S 90 940, -50 1120", dur: 27, begin: 4, color: "#ffd56b" },
+  { path: "M 180 2060 C 360 1740, 120 1560, 420 1430 S 760 1180, 600 980", dur: 25, begin: 9, color: "#ffffff" },
+  { path: "M -50 1500 C 250 1420, 420 1640, 640 1500 S 980 1420, 1060 1560", dur: 29, begin: 2, color: "#a7e3ff" },
+];
+
+function Butterfly({ path, dur, begin, color }: { path: string; dur: number; begin: number; color: string }) {
+  return (
+    <g
+      className="bfly-mover"
+      style={
+        {
+          offsetPath: `path("${path}")`,
+          animationDuration: `${dur}s`,
+          animationDelay: `${-begin}s`,
+        } as React.CSSProperties
+      }
+    >
+      <g className="bfly">
+        <g className="bfly-wing left">
+          <ellipse cx="-7" cy="-4" rx="8" ry="10" fill={color} opacity="0.92" />
+          <ellipse cx="-6" cy="6" rx="6" ry="7" fill={color} opacity="0.8" />
+        </g>
+        <g className="bfly-wing right">
+          <ellipse cx="7" cy="-4" rx="8" ry="10" fill={color} opacity="0.92" />
+          <ellipse cx="6" cy="6" rx="6" ry="7" fill={color} opacity="0.8" />
+        </g>
+        <ellipse cx="0" cy="0" rx="1.8" ry="9" fill="#2a2230" />
       </g>
-      <text className="tile-num" x={x - tw / 2 + 10} y={y - th / 2 + 16} fontSize="12.5" fontWeight="800" fill={darkText ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.92)"}>
-        {sq.n}
-      </text>
     </g>
   );
 }
 
 export function Board({ state, moving }: { state: GameState; moving: boolean }) {
+  const reduce = useMemo(
+    () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
+    [],
+  );
   const [inspect, setInspect] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const road = useMemo(buildRoad, []);
   const tokenPos = nodePos(state.position);
   const pawnRef = useRef<SVGGElement>(null);
 
-  // Zwevende lichtdeeltjes (pollen/zonlicht) maken het bord levend.
+  // Zwevende lichtdeeltjes (pollen/zonlicht) en dwarrelende bloemblaadjes.
   const motes = useMemo(() => {
     const r = mulberry32(99);
     const tint = ["#fff7e0", "#ffe1b0", "#ffd9ec", "#ffffff"];
-    return Array.from({ length: 22 }, () => ({
-      left: r() * 100,
-      top: r() * 100,
-      size: 3 + r() * 6,
-      dur: 9 + r() * 10,
-      delay: -r() * 18,
-      sway: r() * 46 - 23,
-      op: 0.3 + r() * 0.5,
-      color: tint[Math.floor(r() * tint.length)],
-    }));
+    const petalTint = ["#ff7ab8", "#ffd56b", "#fff0a6", "#ff9ecb"];
+    return Array.from({ length: 40 }, (_, i) => {
+      const petal = i % 5 === 0;
+      return {
+        petal,
+        left: r() * 100,
+        top: r() * 100,
+        size: petal ? 6 + r() * 6 : 3 + r() * 6,
+        dur: 8 + r() * 11,
+        delay: -r() * 20,
+        sway: r() * 60 - 30,
+        spin: r() * 540 - 270,
+        op: petal ? 0.5 + r() * 0.4 : 0.3 + r() * 0.5,
+        color: petal ? petalTint[Math.floor(r() * petalTint.length)] : tint[Math.floor(r() * tint.length)],
+      };
+    });
   }, []);
 
   // Camera volgt de pion: bij elke stap schuift het bord zodat de pion
@@ -601,6 +650,21 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             <path d={road} className="road-top" />
           </g>
 
+          {/* Energiepulsen die langs het levenspad stromen */}
+          {!reduce &&
+            [0, 1, 2].map((i) => {
+              const st = {
+                offsetPath: `path("${road}")`,
+                animationDelay: `${-i * 2.4}s`,
+              } as React.CSSProperties;
+              return (
+                <g key={`pulse${i}`}>
+                  <circle r="11" className="pulse-halo" style={st} />
+                  <circle r="4.5" className="pulse-core" style={st} />
+                </g>
+              );
+            })}
+
           {/* De 64 tegels óp de weg */}
           {SQUARES.map((sq) => (
             <Tile key={sq.n} sq={sq} state={state} hovered={hovered === sq.n} />
@@ -616,10 +680,33 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
             );
           })}
 
+          {/* "Je bent hier"-baken: rimpelringen onder de pion */}
+          {!reduce &&
+            [0, 1].map((i) => (
+              <circle
+                key={`ring${i}`}
+                className="beacon-ring"
+                cx={tokenPos.x}
+                cy={tokenPos.y}
+                r="11"
+                fill="none"
+                stroke="#e50067"
+                strokeWidth="3"
+                vectorEffect="non-scaling-stroke"
+                style={{ animationDelay: `${-i * 0.95}s` }}
+              />
+            ))}
+
           {/* Het pionnetje (camera volgt deze groep) */}
           <g ref={pawnRef}>
             <Pawn x={tokenPos.x} y={tokenPos.y - 10} moving={moving} />
           </g>
+
+          {/* Fladderende vlinders over het bord */}
+          {!reduce &&
+            BUTTERFLIES.map((b, i) => (
+              <Butterfly key={`bf${i}`} path={b.path} dur={b.dur} begin={b.begin} color={b.color} />
+            ))}
         </svg>
 
         {/* Levende sfeer: bewegend zonlicht, vignet en zwevende deeltjes */}
@@ -629,7 +716,7 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
           {motes.map((m, i) => (
             <span
               key={i}
-              className="mote"
+              className={m.petal ? "mote petal" : "mote"}
               style={
                 {
                   left: `${m.left}%`,
@@ -640,6 +727,7 @@ export function Board({ state, moving }: { state: GameState; moving: boolean }) 
                   animationDuration: `${m.dur}s`,
                   animationDelay: `${m.delay}s`,
                   "--sway": `${m.sway}px`,
+                  "--spin": `${m.spin}deg`,
                   "--mote-op": m.op,
                 } as React.CSSProperties
               }

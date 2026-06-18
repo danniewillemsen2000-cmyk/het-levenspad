@@ -219,6 +219,80 @@ button { font: inherit; cursor: pointer; }
   85% { opacity: var(--mote-op, 0.6); }
   100% { transform: translate(var(--sway, 12px), -70px) scale(1.05); opacity: 0; }
 }
+/* Dwarrelende bloemblaadjes: groter, draaien en zakken */
+.mote.petal {
+  border-radius: 60% 10% 60% 10%;
+  box-shadow: 0 0 6px 0 currentColor;
+  animation-name: petaldrift;
+  animation-timing-function: linear;
+}
+@keyframes petaldrift {
+  0% { transform: translate(0, -30px) rotate(0deg); opacity: 0; }
+  15% { opacity: var(--mote-op, 0.7); }
+  85% { opacity: var(--mote-op, 0.7); }
+  100% { transform: translate(var(--sway, 20px), 120px) rotate(var(--spin, 240deg)); opacity: 0; }
+}
+
+/* Ademende tegels: een golf rolt over het bord */
+.tile-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tilebob 4.2s ease-in-out infinite;
+}
+@keyframes tilebob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Beweging langs een pad (offset-path) — betrouwbaar en GPU-versneld */
+@keyframes flowpath {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+
+/* Energiepulsen langs het pad */
+.pulse-halo,
+.pulse-core {
+  offset-rotate: 0deg;
+  animation: flowpath 7s linear infinite;
+}
+.pulse-halo { fill: rgba(255, 120, 180, 0.45); filter: blur(1px); }
+.pulse-core { fill: #fff7fb; }
+
+/* "Je bent hier"-baken */
+.beacon-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: beacon 1.9s ease-out infinite;
+}
+@keyframes beacon {
+  0% { transform: scale(0.5); opacity: 0.7; }
+  100% { transform: scale(4.6); opacity: 0; }
+}
+
+/* Vlinders */
+.bfly-mover {
+  offset-rotate: auto;
+  animation: flowpath 22s linear infinite;
+}
+.bfly-wing { transform-box: fill-box; }
+.bfly-wing.left { transform-origin: 100% 50%; animation: flap 0.22s ease-in-out infinite alternate; }
+.bfly-wing.right { transform-origin: 0% 50%; animation: flap 0.22s ease-in-out infinite alternate; }
+@keyframes flap {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.28); }
+}
+
+/* Twinkelende mijlpaalsterren */
+.tile.is-milestone .tile-icon {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.16) rotate(8deg); }
+}
 
 .road-outer {
   fill: none;
